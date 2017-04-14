@@ -1,13 +1,14 @@
-float FilamLength = 150, FilamMass = 50, stiffness = 14;
+float FilamLength = 150, FilamMass = 20, stiffness = 14;
 
-int numOfseg = 6;
-float [] x, y, vx, vy, ax, ay; 
-float angle = PI/10;
+int numOfseg = 16;
+float dt = 0.05;
+ 
+float angle = PI/10, gravity = 10;
 
 
 float segLength = FilamLength / (numOfseg-1), diam = (FilamLength / 2) / numOfseg;
-float gravity = 10, mass = FilamMass / numOfseg;
-float dt = 0.01;
+float mass = FilamMass / numOfseg;
+float [] x, y, vx, vy, ax, ay;
 
 // Runge-Kutta temp variables
 float x1, y1, x2, y2, x3, y3, x4, y4;
