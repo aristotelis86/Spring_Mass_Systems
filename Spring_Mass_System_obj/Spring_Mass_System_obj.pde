@@ -31,6 +31,12 @@ void draw() {
   background(25);
   for (MassObj m : masses) m.display();
   
+  SimpleEuler();
+  
+  //noLoop();
+}
+
+void SimpleEuler() {
   for (int i = 0; i < numOfmass; i++) {
     masses[i].applyForce(new PVector(0,1));
     float ax = masses[i].force.x / mass;
@@ -45,5 +51,4 @@ void draw() {
     masses[i].resolveBoundaryCollision();
   }
   
-  //noLoop();
 }
