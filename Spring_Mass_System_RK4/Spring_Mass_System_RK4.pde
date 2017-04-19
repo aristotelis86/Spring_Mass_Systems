@@ -1,14 +1,21 @@
 // Parameters of the filament
-float FilamLength = 150, FilamMass = 25;
+float FilamLength = 150, FilamMass = 5;
 float stiffness = 16; // stiffness of connecting springs
 int numOfseg = 16; // number of points used to simulate the filament
 
+// Initial and boundary conditions
+float angle = 0; // initial angle of the entire filament from vertical axis
+boolean movingTip = true; // introduce external forcing at leading edge
+float Amplitude = 10; // amplitude of oscillatory motion
+float omega = 2*PI*5; // frequency of oscillatory motion
+
 float dt = 0.02; // time step of simulation
+float t = 0; // init time variable
 
 float gravity = 10; // magnitude of gravity (y-direction, down positive)
-float angle = PI/10; // initial angle of the entire filament from vertical axis
 
-
+///////// END OF INPUTS //////////////////
+//////////////////////////////////////////
 // Parameterization of simulation variables
 float segLength = FilamLength / (numOfseg-1); // distance between points
 float diam = (FilamLength / 2) / numOfseg; // radius of circles showing the points (only for design purposes)
@@ -52,6 +59,11 @@ void draw() {
   displayFilament(x, y);
   
   // Update using Runge-Kutta 4
+  // if there is external forcing at the leading edge
+  if (movingTip) {
+    x[0] = (width/2) + (Amplitude * cos(omega * t));
+    t += dt;
+  }
   for (int i = 1; i < numOfseg; i++) {
     // Mass #2
     // get k1
@@ -126,7 +138,7 @@ void draw() {
     vy[i] = vy[i] + (dt/6)*(ay1 + 2*ay2 + 2*ay3 + ay4);
   }
   
-  
+
 }
 
 // Spring force calculator
