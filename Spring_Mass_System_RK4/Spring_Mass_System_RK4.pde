@@ -1,25 +1,26 @@
 // Parameters of the filament
 float FilamLength = 150, FilamMass = 5;
-float stiffness = 16; // stiffness of connecting springs
+float stiffness = 20; // stiffness of connecting springs
 int numOfseg = 16; // number of points used to simulate the filament
 
 // Initial and boundary conditions
 float angle = 0; // initial angle of the entire filament from vertical axis
-boolean movingTip = false; // introduce external forcing at leading edge
+boolean movingTip = true; // introduce external forcing at leading edge
 float Amplitude = 10; // amplitude of oscillatory motion
-float omega = 2*PI*1; // frequency of oscillatory motion
-boolean freeFall = true; // let the filament drop
+float omega = 2*PI*.5; // frequency of oscillatory motion
+boolean freeFall = false; // let the filament drop
 float freeT = 15; // time at which the filament becomes free
 
 float dt = 0.02; // time step of simulation
 float t = 0; // init time variable
 
-float gravity = 10; // magnitude of gravity (y-direction, down positive)
+float gravity = 10; // magnitude of gravity (y-direction, positive down )
 
 ///////// END OF INPUTS //////////////////
 //////////////////////////////////////////
 // Parameterization of simulation variables
 float segLength = FilamLength / (numOfseg-1); // distance between points
+float natLength = 0.9 * segLength;
 float diam = (FilamLength / 2) / numOfseg; // radius of circles showing the points (only for design purposes)
 float mass = FilamMass / numOfseg; // mass of each point
 float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
@@ -33,7 +34,7 @@ PVector F, Temp; // forces
 
 void setup() {
   size(800, 600);
-  frameRate(100);
+  //frameRate(100);
   x = new float[numOfseg];
   y = new float[numOfseg];
   vx = new float[numOfseg];
@@ -148,7 +149,7 @@ void draw() {
 // Spring force calculator
 PVector force(float x0, float x1, float y0, float y1) {
   float s = sqrt(sq(x1 - x0) + sq(y1 - y0));
-  float T = - stiffness * (s - segLength);
+  float T = - stiffness * (s - natLength);
   float sx = (x1-x0)/s, sy = (y1-y0)/s;
   return new PVector(T*sx,T*sy);
 }
