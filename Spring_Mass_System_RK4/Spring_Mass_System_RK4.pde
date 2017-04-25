@@ -4,8 +4,8 @@ float stiffness = 20; // stiffness of connecting springs
 int numOfseg = 16; // number of points used to simulate the filament
 
 // Initial and boundary conditions
-float angle = 0; // initial angle of the entire filament from vertical axis
-boolean movingTip = true; // introduce external forcing at leading edge
+float angle = PI/3; // initial angle of the entire filament from vertical axis
+boolean movingTip = false; // introduce external forcing at leading edge
 float Amplitude = 10; // amplitude of oscillatory motion
 float omega = 2*PI*.5; // frequency of oscillatory motion
 boolean freeFall = false; // let the filament drop
@@ -20,7 +20,7 @@ float gravity = 10; // magnitude of gravity (y-direction, positive down )
 //////////////////////////////////////////
 // Parameterization of simulation variables
 float segLength = FilamLength / (numOfseg-1); // distance between points
-float natLength = 0.9 * segLength;
+float natLength = 0.9*segLength;
 float diam = (FilamLength / 2) / numOfseg; // radius of circles showing the points (only for design purposes)
 float mass = FilamMass / numOfseg; // mass of each point
 float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
