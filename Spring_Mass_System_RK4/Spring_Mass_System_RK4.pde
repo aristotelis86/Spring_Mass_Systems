@@ -70,6 +70,9 @@ void draw() {
   // Display
   displayFilament(x, y);
   
+  // Detect Collisions;
+  collisionDetection();
+  
   // Update using Runge-Kutta 4
   // if there is external forcing at the leading edge
   if (movingTip) {
@@ -80,7 +83,7 @@ void draw() {
   else init_i = 1;
   
   for (int i = init_i; i < numOfseg; i++) {
-    
+    // println(x[i],y[i]); // added for demonstration
     // get k1
     x1 = x[i];
     y1 = y[i];
@@ -176,5 +179,19 @@ void displayFilament(float xpos[], float ypos[]) {
       line(xpos[i], ypos[i], xpos[i+1], ypos[i+1]);
     }
   }
+}
 
+// Check for collisions each mass
+void collisionDetection() {
+  float crit_dist;
+  
+  for (int i = 0; i < numOfseg; i++){
+    for (int j = numOfseg-1; j > i; j--) {
+      crit_dist = sqrt(sq(x[i] - x[j]) + sq(y[i] - y[j]));
+      if (crit_dist < 2*diam) println("Collision detected for "+ i +  " and " + j);
+    }
+  }
+  
+  
+  
 }
