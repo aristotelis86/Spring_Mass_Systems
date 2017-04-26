@@ -1,15 +1,15 @@
 // Parameters of the filament
 float FilamLength = 150, FilamMass = 5;
-float stiffness = 20; // stiffness of connecting springs
+//float stiffness = 20; // stiffness of connecting springs
 int numOfseg = 16; // number of points used to simulate the filament
 
 // Initial and boundary conditions
-float angle = PI/3; // initial angle of the entire filament from vertical axis
+float angle = 0; // initial angle of the entire filament from vertical axis
 boolean movingTip = false; // introduce external forcing at leading edge
 float Amplitude = 10; // amplitude of oscillatory motion
 float omega = 2*PI*.5; // frequency of oscillatory motion
-boolean freeFall = false; // let the filament drop
-float freeT = 15; // time at which the filament becomes free
+boolean freeFall = true; // let the filament drop
+float freeT = 10; // time at which the filament becomes free
 
 float dt = 0.02; // time step of simulation
 float t = 0; // init time variable
@@ -20,10 +20,11 @@ float gravity = 10; // magnitude of gravity (y-direction, positive down )
 //////////////////////////////////////////
 // Parameterization of simulation variables
 float segLength = FilamLength / (numOfseg-1); // distance between points
-float natLength = 0.9*segLength;
+float natLength = 0;//0.9*segLength;
 float diam = (FilamLength / 2) / numOfseg; // radius of circles showing the points (only for design purposes)
 float mass = FilamMass / numOfseg; // mass of each point
 float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
+float [] stiffness; // array for stiffness of each spring
 int init_i;
 
 // Runge-Kutta temp variables
@@ -42,6 +43,8 @@ void setup() {
   ax = new float[numOfseg];
   ay = new float[numOfseg];
   
+  stiffness = new float[numOfseg-1];
+  
   // Initialize velocities
   for (int i = 0; i < numOfseg; i++) {
     vx[i] = 0;
@@ -52,6 +55,12 @@ void setup() {
       x[i] = i * segLength * sin(angle) + width/2;
       y[i] = i * segLength * cos(angle) + 30;
     }
+  
+  // Calculate stiffness of springs
+  for (int i = 0; i < numOfseg-1; i++) {
+    stiffness[i] = (gravity/segLength) * (numOfseg-i-1) * mass;
+  }
+  
 }
 
 
@@ -71,15 +80,16 @@ void draw() {
   else init_i = 1;
   
   for (int i = init_i; i < numOfseg; i++) {
+    
     // get k1
     x1 = x[i];
     y1 = y[i];
     vx1 = vx[i];
     vy1 = vy[i];
     
-    if (i > 0) F = force(x[i-1],x1,y[i-1],y1);  // calculate force from spring above
+    if (i > 0) F = force(x[i-1],x1,y[i-1],y1,stiffness[i-1]);  // calculate force from spring above
     if ( i < numOfseg-1) {
-      Temp = force(x1,x[i+1],y1,y[i+1]); // calculate force from spring below (if any)
+      Temp = force(x1,x[i+1],y1,y[i+1],stiffness[i]); // calculate force from spring below (if any)
       F.sub(Temp);
     }
     F.add(new PVector(0,mass*gravity)); // add gravity
@@ -93,9 +103,9 @@ void draw() {
     vx2 = vx[i] + 0.5*ax1*dt;
     vy2 = vy[i] + 0.5*ay1*dt;
     
-    if (i > 0) F = force(x[i-1],x2,y[i-1],y2); // calculate force from spring above
+    if (i > 0) F = force(x[i-1],x2,y[i-1],y2,stiffness[i-1]); // calculate force from spring above
     if ( i < numOfseg-1) {
-      Temp = force(x2,x[i+1],y2,y[i+1]); // calculate force from spring below (if any)
+      Temp = force(x2,x[i+1],y2,y[i+1],stiffness[i]); // calculate force from spring below (if any)
       F.sub(Temp);
     }
     F.add(new PVector(0,mass*gravity)); // add gravity 
@@ -109,9 +119,9 @@ void draw() {
     vx3 = vx[i] + 0.5*ax2*dt;
     vy3 = vy[i] + 0.5*ay2*dt;
     
-    if (i > 0) F = force(x[i-1],x3,y[i-1],y3); // calculate force from spring above
+    if (i > 0) F = force(x[i-1],x3,y[i-1],y3,stiffness[i-1]); // calculate force from spring above
     if ( i < numOfseg-1) {
-      Temp = force(x3,x[i+1],y3,y[i+1]); // calculate force from spring below (if any)
+      Temp = force(x3,x[i+1],y3,y[i+1],stiffness[i]); // calculate force from spring below (if any)
       F.sub(Temp);
     }
     F.add(new PVector(0,mass*gravity)); // add gravity
@@ -125,9 +135,9 @@ void draw() {
     vx4 = vx[i] + ax3*dt;
     vy4 = vy[i] + ay3*dt;
     
-    if (i > 0) F = force(x[i-1],x4,y[i-1],y4); // calculate force from spring above
+    if (i > 0) F = force(x[i-1],x4,y[i-1],y4,stiffness[i-1]); // calculate force from spring above
     if ( i < numOfseg-1) {
-      Temp = force(x4,x[i+1],y4,y[i+1]); // calculate force from spring below (if any)
+      Temp = force(x4,x[i+1],y4,y[i+1],stiffness[i]); // calculate force from spring below (if any)
       F.sub(Temp);
     }
     F.add(new PVector(0,mass*gravity)); // add gravity
@@ -147,9 +157,9 @@ void draw() {
 }
 
 // Spring force calculator
-PVector force(float x0, float x1, float y0, float y1) {
+PVector force(float x0, float x1, float y0, float y1, float stiff) {
   float s = sqrt(sq(x1 - x0) + sq(y1 - y0));
-  float T = - stiffness * (s - natLength);
+  float T = - stiff * (s - natLength);
   float sx = (x1-x0)/s, sy = (y1-y0)/s;
   return new PVector(T*sx,T*sy);
 }
