@@ -1,17 +1,17 @@
 // Parameters of the filament
-float FilamLength = 150, FilamMass = 5;
+float FilamLength = 250, FilamMass = 25;
 //float stiffness = 20; // stiffness of connecting springs
-int numOfseg = 16; // number of points used to simulate the filament
+int numOfseg = 50; // number of points used to simulate the filament
 
 // Initial and boundary conditions
 float angle = 0; // initial angle of the entire filament from vertical axis
-boolean movingTip = false; // introduce external forcing at leading edge
+boolean movingTip = true; // introduce external forcing at leading edge
 float Amplitude = 10; // amplitude of oscillatory motion
-float omega = 2*PI*.5; // frequency of oscillatory motion
-boolean freeFall = true; // let the filament drop
-float freeT = 10; // time at which the filament becomes free
+float omega = 2*PI*.4; // frequency of oscillatory motion
+boolean freeFall = false; // let the filament drop
+float freeT = 5; // time at which the filament becomes free
 
-float dt = 0.02; // time step of simulation
+float dt = 0.1; // time step of simulation
 float t = 0; // init time variable
 
 float gravity = 10; // magnitude of gravity (y-direction, positive down )
@@ -33,6 +33,10 @@ float vx1, vy1, vx2, vy2, vx3, vy3, vx4, vy4;
 float ax1, ay1, ax2, ay2, ax3, ay3, ax4, ay4;
 PVector F, Temp; // forces
 
+PrintWriter output; // handles output file
+
+color [] cl;
+
 void setup() {
   size(800, 600);
   //frameRate(100);
@@ -42,6 +46,8 @@ void setup() {
   vy = new float[numOfseg];
   ax = new float[numOfseg];
   ay = new float[numOfseg];
+  
+  cl = new color[numOfseg];
   
   stiffness = new float[numOfseg-1];
   
@@ -54,26 +60,79 @@ void setup() {
   for (int i = 0; i < numOfseg; i++) {
       x[i] = i * segLength * sin(angle) + width/2;
       y[i] = i * segLength * cos(angle) + 30;
+      cl[i] = color(random(255), random(255), random(255));
     }
   
   // Calculate stiffness of springs
   for (int i = 0; i < numOfseg-1; i++) {
     stiffness[i] = (gravity/segLength) * (numOfseg-i-1) * mass;
   }
-  
+  //output = createWriter("positions.txt");
+  //output.println("t, x, y");
 }
 
 
 void draw() {
   background(45);
   
+  //output.println(t + " " + x[1] + " " + y[1] + " " + x[numOfseg-1] + " " + y[numOfseg-1] + " " + x[numOfseg/2] + " " + y[numOfseg/2]);
+  
   // Display
   displayFilament(x, y);
+  
+  // Update using Runge-Kutta 4
+  RungeKutta4();
   
   // Detect Collisions;
   collisionDetection();
   
-  // Update using Runge-Kutta 4
+}
+
+// Spring force calculator
+PVector force(float x0, float x1, float y0, float y1, float stiff) {
+  float s = sqrt(sq(x1 - x0) + sq(y1 - y0));
+  float T = - stiff * (s - natLength);
+  float sx = (x1-x0)/s, sy = (y1-y0)/s;
+  return new PVector(T*sx,T*sy);
+}
+
+// Display filaments as a series of points and connecting lines
+void displayFilament(float xpos[], float ypos[]) {
+  for ( int i = 0; i < xpos.length; i++) {
+    fill(cl[i]);
+    noStroke();
+    ellipse(xpos[i], ypos[i], diam, diam);
+    
+    if (i < xpos.length - 1) {
+      stroke(200);
+      line(xpos[i], ypos[i], xpos[i+1], ypos[i+1]);
+    }
+  }
+}
+
+// Check for collisions each mass
+// Unfortunately, totally elastic collisions for now
+void collisionDetection() {
+  float crit_dist;
+  
+  for (int i = 0; i < numOfseg; i++){
+    for (int j = numOfseg-1; j > i; j--) {
+      crit_dist = sqrt(sq(x[i] - x[j]) + sq(y[i] - y[j]));
+      if (crit_dist < diam) {
+        println("Collision detected for "+ i +  " and " + j);
+        
+        vx[i] = vx[j];
+        vx[j] = vx[i];
+        
+        vy[i] = vy[j];
+        vy[j] = vy[i];
+        
+      }
+    }
+  } 
+}
+
+void RungeKutta4() {
   // if there is external forcing at the leading edge
   if (movingTip) {
     x[0] = (width/2) + (Amplitude * cos(omega * t));
@@ -155,43 +214,11 @@ void draw() {
     vx[i] = vx[i] + (dt/6)*(ax1 + 2*ax2 + 2*ax3 + ax4);
     vy[i] = vy[i] + (dt/6)*(ay1 + 2*ay2 + 2*ay3 + ay4);
   }
-  
-
 }
 
-// Spring force calculator
-PVector force(float x0, float x1, float y0, float y1, float stiff) {
-  float s = sqrt(sq(x1 - x0) + sq(y1 - y0));
-  float T = - stiff * (s - natLength);
-  float sx = (x1-x0)/s, sy = (y1-y0)/s;
-  return new PVector(T*sx,T*sy);
-}
-
-// Display filaments as a series of points and connecting lines
-void displayFilament(float xpos[], float ypos[]) {
-  for ( int i = 0; i < xpos.length; i++) {
-    fill(0, 235, 40);
-    noStroke();
-    ellipse(xpos[i], ypos[i], diam, diam);
-    
-    if (i < xpos.length - 1) {
-      stroke(200);
-      line(xpos[i], ypos[i], xpos[i+1], ypos[i+1]);
-    }
-  }
-}
-
-// Check for collisions each mass
-void collisionDetection() {
-  float crit_dist;
-  
-  for (int i = 0; i < numOfseg; i++){
-    for (int j = numOfseg-1; j > i; j--) {
-      crit_dist = sqrt(sq(x[i] - x[j]) + sq(y[i] - y[j]));
-      if (crit_dist < 2*diam) println("Collision detected for "+ i +  " and " + j);
-    }
-  }
-  
-  
-  
-}
+// Gracefully terminate writing...
+//void keyPressed() {
+//  output.flush(); // Writes the remaining data to the file
+//  output.close(); // Finishes the file
+//  exit(); // Stops the program
+//}
