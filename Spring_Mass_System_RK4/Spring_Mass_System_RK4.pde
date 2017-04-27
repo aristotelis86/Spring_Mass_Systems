@@ -1,15 +1,17 @@
 // Parameters of the filament
 float FilamLength = 250, FilamMass = 25;
 //float stiffness = 20; // stiffness of connecting springs
-int numOfseg = 50; // number of points used to simulate the filament
+int numOfseg = 100; // number of points used to simulate the filament
 
 // Initial and boundary conditions
 float angle = 0; // initial angle of the entire filament from vertical axis
-boolean movingTip = true; // introduce external forcing at leading edge
-float Amplitude = 10; // amplitude of oscillatory motion
-float omega = 2*PI*.4; // frequency of oscillatory motion
+boolean movingTip = false; // introduce external forcing at leading edge
+float Amplitude = 100; // amplitude of oscillatory motion
+float omega = 2*PI*.2; // frequency of oscillatory motion
 boolean freeFall = false; // let the filament drop
 float freeT = 5; // time at which the filament becomes free
+
+boolean wrSwitch = false;
 
 float dt = 0.1; // time step of simulation
 float t = 0; // init time variable
@@ -20,7 +22,7 @@ float gravity = 10; // magnitude of gravity (y-direction, positive down )
 //////////////////////////////////////////
 // Parameterization of simulation variables
 float segLength = FilamLength / (numOfseg-1); // distance between points
-float natLength = 0;//0.9*segLength;
+float natLength = 0.5*segLength;
 float diam = (FilamLength / 2) / numOfseg; // radius of circles showing the points (only for design purposes)
 float mass = FilamMass / numOfseg; // mass of each point
 float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
@@ -67,15 +69,18 @@ void setup() {
   for (int i = 0; i < numOfseg-1; i++) {
     stiffness[i] = (gravity/segLength) * (numOfseg-i-1) * mass;
   }
-  //output = createWriter("positions.txt");
-  //output.println("t, x, y");
+  
+  if (wrSwitch) {
+    output = createWriter("positions.txt");
+    output.println("t, x, y");
+  }
 }
 
 
 void draw() {
   background(45);
   
-  //output.println(t + " " + x[1] + " " + y[1] + " " + x[numOfseg-1] + " " + y[numOfseg-1] + " " + x[numOfseg/2] + " " + y[numOfseg/2]);
+  if (wrSwitch) output.println(t + " " + x[1] + " " + y[1] + " " + x[numOfseg-1] + " " + y[numOfseg-1] + " " + x[numOfseg/2] + " " + y[numOfseg/2]);
   
   // Display
   displayFilament(x, y);
@@ -132,10 +137,29 @@ void collisionDetection() {
   } 
 }
 
+
+// Check collisions between mass-line
+// Elastic collisions, speed is divided by 2...
+void checkCollisionLines() {
+  float crit_dist;
+  
+  for (int i = 0; i < numOfseg; i++){
+    for (int j = numOfseg-1; j > i; j--) {
+      crit_dist = (y[j] - y[j-1])*x[i] - (x[j] - x[j-1])*y[i] + x[j]*y[j-1] - y[j]*x[j-1];
+      crit_dist = crit_dist/sqrt(sq(y[j]-y[j-1]) + sq(x[j]-x[j-1]));
+      
+      if (crit_dist < diam) {
+        int jn = j-1;
+        println("Collision detected for "+ i +  " and  line between " + j + " and " + jn);
+      }
+    }
+  }
+}
+
 void RungeKutta4() {
   // if there is external forcing at the leading edge
   if (movingTip) {
-    x[0] = (width/2) + (Amplitude * cos(omega * t));
+    x[0] = (width/2) + (Amplitude * sin(omega * t));
   }
   t += dt;
   if ((freeFall) && (t > freeT)) init_i = 0;
@@ -217,8 +241,10 @@ void RungeKutta4() {
 }
 
 // Gracefully terminate writing...
-//void keyPressed() {
-//  output.flush(); // Writes the remaining data to the file
-//  output.close(); // Finishes the file
-//  exit(); // Stops the program
-//}
+void keyPressed() {
+  if (wrSwitch) {
+  output.flush(); // Writes the remaining data to the file
+  output.close(); // Finishes the file
+  exit(); // Stops the program
+  }
+}
