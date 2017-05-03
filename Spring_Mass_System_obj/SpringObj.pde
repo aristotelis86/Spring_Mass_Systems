@@ -34,7 +34,7 @@ class SpringObj {
   void solve_stiffness() {
     float gravity = 10;
     float dist = PVector.dist(m1.position, m2.position);
-    stiffness = m2.mass * gravity / dist;
+    stiffness = m2.mass * gravity / abs(restLength - dist);
   }
   
 }
