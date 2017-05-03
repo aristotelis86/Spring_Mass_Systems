@@ -1,7 +1,7 @@
 // Parameters of the filament
 float FilamLength = 250, FilamMass = 25;
 //float stiffness = 20; // stiffness of connecting springs
-int numOfseg = 40; // number of points used to simulate the filament
+int numOfseg = 20; // number of points used to simulate the filament
 
 // Initial and boundary conditions
 float angle = 0; // initial angle of the entire filament from vertical axis
@@ -60,8 +60,10 @@ void setup() {
   }
   // Initialize positions
   for (int i = 0; i < numOfseg; i++) {
-      x[i] = i * segLength * sin(angle) + width/2;
+      // x[i] = i * segLength * sin(angle) + width/2;
       y[i] = i * segLength * cos(angle) + 30;
+      x[i] = 10 * sin(4*PI*(y[i]-30)/FilamLength) + width/2;
+      println(x[i], y[i]);
       cl[i] = color(random(255), random(255), random(255));
     }
   
@@ -165,7 +167,7 @@ void RungeKutta4() {
   if ((freeFall) && (t > freeT)) init_i = 0;
   else init_i = 1;
   
-  for (int i = init_i; i < numOfseg; i++) {
+  for (int i = init_i; i < numOfseg-1; i++) {
     // println(x[i],y[i]); // added for demonstration
     // get k1
     x1 = x[i];
