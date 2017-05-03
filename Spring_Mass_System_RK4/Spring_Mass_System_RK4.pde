@@ -160,15 +160,15 @@ void checkCollisionLines() {
 
 void RungeKutta4() {
   // if there is external forcing at the leading edge
-  if (movingTip) {
-    x[0] = (width/2) + (Amplitude * sin(omega * t));
-  }
+  if (movingTip) x[0] = (width/2) + (Amplitude * sin(omega * t));
+  
   t += dt;
+  
   if ((freeFall) && (t > freeT)) init_i = 0;
   else init_i = 1;
   
-  for (int i = init_i; i < numOfseg-1; i++) {
-    // println(x[i],y[i]); // added for demonstration
+  for (int i = init_i; i < numOfseg; i++) {
+    
     // get k1
     x1 = x[i];
     y1 = y[i];
