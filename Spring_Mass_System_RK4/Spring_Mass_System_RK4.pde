@@ -1,7 +1,7 @@
 // Parameters of the filament
 float FilamLength = 250, FilamMass = 25;
 //float stiffness = 20; // stiffness of connecting springs
-int numOfseg = 100; // number of points used to simulate the filament
+int numOfseg = 40; // number of points used to simulate the filament
 
 // Initial and boundary conditions
 float angle = 0; // initial angle of the entire filament from vertical axis
@@ -67,7 +67,7 @@ void setup() {
   
   // Calculate stiffness of springs
   for (int i = 0; i < numOfseg-1; i++) {
-    stiffness[i] = (gravity/segLength) * (numOfseg-i-1) * mass;
+    stiffness[i] = (gravity/abs(natLength - segLength)) * (numOfseg-i-1) * mass;
   }
   
   if (wrSwitch) {
