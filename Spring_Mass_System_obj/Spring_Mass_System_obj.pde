@@ -1,68 +1,110 @@
+//////////////////////// INPUTS Section //////////////////////////////
+// Parameters of the filament
+float FilamLength = 250, FilamMass = 25;
+int numOfpoint = 20; // number of points used to simulate the filament
+
+// Time variables
+float dt = 0.1; // time step of simulation
+float t = 0; // init time variable
+
+// Boolean Inputs
+boolean movingTip = false; // introduce external forcing at leading edge
+boolean freeFall = false; // let the filament drop
+boolean wrSwitch = false; // create output file with positions
+boolean sinInit = true; // create a sinus-like image for the filament as initial state
+
+// Initial Condition - Shape parameters
+float angle = PI/4; // initial angle of the entire filament from vertical axis
+float sinAmp = 20; // amplitude of initial displacement for the filament's points
+float sinN = 4; // mode number of the filament
+
+// Moving leading edge parameters
+float Amplitude = 100; // amplitude of oscillatory motion
+float omega = 2*PI*.2; // frequency of oscillatory motion
+
+// Gravity 
+float gravity = 10; // magnitude of gravity (y-direction, positive down )
+
+
+//////////////////////// END of INPUTS Section //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+// Parameterization of simulation variables
+int numOfspring = numOfpoint - 1;
+float segLength = FilamLength / numOfspring; // distance between points
+float natLength = 0.5*segLength;
+float diam = (FilamLength / 2) / numOfpoint; // radius of circles showing the points (only for design purposes)
+float mass = FilamMass / numOfpoint; // mass of each point
+
+
+// Declaration of variables used
+float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
+float [] stiffness; // array for stiffness of each spring
+
+PrintWriter output; // handles output file
 
 MassObj [] masses;
 SpringObj [] springs;
-PVector [] positions, velocities;
 
-int numOfmass = 3;
-int numOfspring = numOfmass - 1;
-float massDist = 100;
-float natLength = 0 * massDist;
-float mass = 1;
-float stiffness = 1;
-float radius = 10;
-float angle = 0;
-float dt =0.05;
-
-
-
+///////////////////////////////////////////////////////////////////
+// Setup Section
 void setup() {
   size(800, 600);
-  //frameRate(50);
-  masses = new MassObj[numOfmass];
+  // Initialization
+  x = new float[numOfpoint];
+  y = new float[numOfpoint];
+  masses = new MassObj[numOfpoint];
   springs = new SpringObj[numOfspring];
-  positions = new PVector[numOfmass];
-  velocities = new PVector[numOfmass];
+  stiffness = new float[numOfspring];
   
-  for (int i = 0; i < numOfmass; i++) {
-    positions[i] = new PVector(i * massDist * sin(angle) + width / 2, i * massDist * cos(angle) + 30);
-    velocities[i] = new PVector(0, 0);
-    masses[i] = new MassObj(positions[i].x, positions[i].y, mass, radius);
+  // Apply initial conditions - Create the initial shape
+  if (sinInit) {
+    for (int i = 0; i < numOfpoint; i++) {
+      y[i] = i * segLength + 30;
+      x[i] = sinAmp * sin(sinN*PI*(y[i]-30)/FilamLength) + width/2;
+      masses[i] = new MassObj(x[i], y[i], mass, diam);
+    }
   }
+  else{
+    for (int i = 0; i < numOfpoint; i++) {
+      y[i] = i * segLength * cos(angle) + 30;
+      x[i] = i * segLength * sin(angle) + width/2;
+      masses[i] = new MassObj(x[i], y[i], mass, diam);
+    }
+  }
+  
   for (int i = 0; i < numOfspring; i++) {
-    springs[i] = new SpringObj(masses[i], masses[i+1], stiffness, 0, natLength);
-    springs[i].solve_stiffness();
-    println(springs[i].stiffness);
+    stiffness[i] = (gravity/abs(natLength - segLength)) * (numOfspring-i) * mass;
   }
   
+  for (int i = 0; i < numOfspring; i++) {
+    springs[i] = new SpringObj( masses[i], masses[i+1], stiffness[i], 0, natLength );
+  }
   
-}
+  if (wrSwitch) {
+    output = createWriter("positions.txt");
+    output.println("t, x, y");
+  }
+  
+} // end of setup
 
 void draw() {
   background(25);
-  for (MassObj m : masses) m.display();
-  for (SpringObj s : springs) {
-    s.display();
-    s.applyForces();
-  }
   
-  SimpleEuler();
+  // Display
+  for (SpringObj s : springs) s.display();
+  for (MassObj m: masses) m.display();
   
-  //for (MassObj m : masses) m.resolveBoundaryCollision();
-  //for (MassObj m : masses) println(m.force);
-  //noLoop();
-}
-
-void SimpleEuler() {
-  for (int i = 1; i < numOfmass; i++) {
-    masses[i].applyForce(new PVector(0,1));
-    float ax = masses[i].force.x / mass;
-    float ay = masses[i].force.y / mass;
-    
-    masses[i].velocity.x += ax * dt;
-    masses[i].velocity.y += ay * dt;
-    
-    masses[i].position.x += masses[i].velocity.x * dt;
-    masses[i].position.y += masses[i].velocity.y * dt;
-    
-  }
+  
+  // Update
+  
+  
+  // Check Collisions
+  
+  
+  // Resolve Collisions
+  
+  
+  
+  
 }
