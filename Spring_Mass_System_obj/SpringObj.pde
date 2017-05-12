@@ -31,6 +31,26 @@ class SpringObj {
     m2.applyForce(Tension);
   }
   
+  PVector getForceA() {
+    PVector Tension = PVector.sub(m1.position, m2.position);
+    float stretch = Tension.mag();
+    stretch -= restLength;
+    
+    Tension.normalize();
+    Tension.mult(-stiffness * stretch);
+    return Tension;
+  }
+  
+  PVector getForceB() {
+    PVector Tension = PVector.sub(m1.position, m2.position);
+    float stretch = Tension.mag();
+    stretch -= restLength;
+    
+    Tension.normalize();
+    Tension.mult(stiffness * stretch);
+    return Tension;
+  }
+  
   void solve_stiffness() {
     float gravity = 10;
     float dist = PVector.dist(m1.position, m2.position);

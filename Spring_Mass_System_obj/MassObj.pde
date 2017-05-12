@@ -24,6 +24,16 @@ class MassObj {
     force.add(Force);
   }
   
+  void updatePosition(float xpos, float ypos) {
+    position.x = xpos;
+    position.y = ypos;
+  }
+  
+  void updateVelocity(float vx, float vy) {
+    velocity.x = vx;
+    velocity.y = vy;
+  }
+  
   void clearForce() {
     force.mult(0);
   }
