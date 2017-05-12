@@ -6,20 +6,20 @@ int numOfseg = 40; // number of points used to simulate the filament
 // Initial and boundary conditions
 float angle = PI/4; // initial angle of the entire filament from vertical axis
 boolean movingTip = false; // introduce external forcing at leading edge
-boolean pinEnd = false;
+boolean pinEnd = true;
 float Amplitude = 10; // amplitude of oscillatory motion
 float omega = 2*PI*.2; // frequency of oscillatory motion
 boolean freeFall = false; // let the filament drop
 float freeT = 3; // time at which the filament becomes free
 
-boolean wrSwitch = false;
+boolean wrSwitch = true;
 
 float dt = 0.05; // time step of simulation
 float t = 0; // init time variable
 
-float gravity = 10; // magnitude of gravity (y-direction, positive down )
+float gravity = 0; // magnitude of gravity (y-direction, positive down )
 
-float ratio = 0.5; // ratio of resting length over segment length
+float ratio = 0.95; // ratio of resting length over segment length
 float Dratio = 0.01; // increment ratio for testing
 
 ///////// END OF INPUTS //////////////////
@@ -33,6 +33,8 @@ float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each p
 float [] stiffness; // array for stiffness of each spring
 int init_i;
 int end_i;
+float stiff = 50;
+float dStiff = 20;
 
 // Runge-Kutta temp variables
 float x1, y1, x2, y2, x3, y3, x4, y4;
@@ -58,11 +60,13 @@ void setup() {
   
   stiffness = new float[numOfseg-1];
   
+  
+  
   // Running the initializer
-  Initializer(ratio);
+  Initializer(ratio, stiff);
   
   if (wrSwitch) {
-    output = createWriter("positions.txt");
+    output = createWriter("positions_mode3.txt");
     output.println("t, x, y");
   }
   if (pinEnd) end_i = numOfseg-1;
@@ -77,7 +81,7 @@ void draw() {
   textSize(32);
   text(t, 10, 30);
   
-  if (wrSwitch) output.println(t + " " + x[2] + " " + y[2] + " " + x[11] + " " + y[11] + " " + x[numOfseg-1] + " " + y[numOfseg-1]);
+  if (wrSwitch) output.println(t + " " + x[9] + " " + y[9] + " " + x[20] + " " + y[20] + " " + x[numOfseg-3] + " " + y[numOfseg-3]);
   
   // Display
   displayFilament(x, y);
@@ -92,11 +96,12 @@ void draw() {
   collisionDetection();
  //noLoop();
  
- //if ((t % 100 < dt) && (t < 1100)) {
- //  println("Running for ratio " + ratio);
- //  Initializer(ratio);
- //  ratio += Dratio;
- //}
+ if ((t % 100 < dt) && (t < 2100)) {
+   println("Running for ratio " + ratio);
+   println("Running for stiffness " + stiff);
+   Initializer(ratio,stiff);
+   stiff += dStiff;
+ }
  
  
 }
@@ -278,7 +283,7 @@ void Initializer() {
 }
 
 // Initializer
-void Initializer(float ratio) {
+void Initializer(float ratio, float stiff) {
   natLength = ratio*segLength;
   // Initialize velocities
   for (int i = 0; i < numOfseg; i++) {
@@ -287,16 +292,16 @@ void Initializer(float ratio) {
   }
   // Initialize positions
   for (int i = 0; i < numOfseg; i++) {
-      x[i] = i * segLength * sin(angle) + width/2;
-      y[i] = i * segLength * cos(angle) + 30;
-      //y[i] = i * segLength + 30;
-      //x[i] = 35 * sin(2*PI*(y[i]-30)/FilamLength) + width/2;
+      //x[i] = i * segLength * sin(angle) + width/2;
+      //y[i] = i * segLength * cos(angle) + 30;
+      y[i] = i * segLength + 30;
+      x[i] = 35 * sin(3*PI*(y[i]-30)/FilamLength) + width/2;
       cl[i] = color(random(255), random(255), random(255));
     }
   
   // Calculate stiffness of springs
   for (int i = 0; i < numOfseg-1; i++) {
-    stiffness[i] = (gravity/abs(natLength - segLength)) * (numOfseg-i-1) * mass;
+    stiffness[i] = stiff; //(gravity/abs(natLength - segLength)) * (numOfseg-i-1) * mass;
   }
 
 }

@@ -2,7 +2,7 @@
 //////////////////////// INPUTS Section //////////////////////////////
 // Parameters of the filament
 float FilamLength = 250, FilamMass = 25;
-int numOfpoint = 40; // number of points used to simulate the filament
+int numOfpoint = 43; // number of points used to simulate the filament
 float nat_seg = 0.5; // resting to segment length ratio for springs
 
 // Time variables
@@ -21,7 +21,7 @@ boolean sinInit = false; // create a sinus-like image for the filament as initia
 boolean pinEnd = false; // trailing edge is pinned
 
 // Initial Condition - Shape parameters
-float angle = PI/4; // initial angle of the entire filament from aligning axis
+float angle = PI/8; // initial angle of the entire filament from aligning axis
 float sinAmp = 20; // amplitude of initial displacement for the filament's points
 float sinN = 1; // mode number of the filament
 
