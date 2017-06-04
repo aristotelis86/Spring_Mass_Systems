@@ -29,7 +29,7 @@ def stiff_calculator(stiff):
     
     LL = 10
     MM = 11
-    NN = 11
+    NN = 110
     ratio = 1.1
     
     stretch = stretch_calculator(LL, MM, NN, ratio, stiff)
