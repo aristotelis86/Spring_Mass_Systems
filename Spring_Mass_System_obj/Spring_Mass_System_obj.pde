@@ -12,7 +12,7 @@ float freeT = 3; // time of release to perform free fall
 
 // Boolean Inputs
 boolean alignX = false; // create the filament along x-axis
-boolean initAng = true; // initialize with an angle
+boolean initAng = false; // initialize with an angle
 boolean movingTip = false; // introduce external forcing at leading edge
 boolean freeVib = false; // check shapes without gravity
 boolean freeFall = false; // let the filament drop
