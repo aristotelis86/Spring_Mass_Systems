@@ -3,10 +3,12 @@
 import numpy
 import scipy
 
-file = open('distances.txt','w') 
-LL = 10
-MM = 11
-NN = 110
+file = open('distances.txt','w')
+filestiff = open('stiffness.txt','w')
+ 
+LL = 250
+MM = 25
+NN = 43
 ratio = 1.1
 restLength = (LL/(NN-1))
 
@@ -31,7 +33,9 @@ def stiff_calculator(stiff):
     
     
     
-STIFFNESS = scipy.optimize.fsolve(stiff_calculator,1000)
+STIFFNESS = scipy.optimize.fsolve(stiff_calculator,10000)
+filestiff.write('%f \n' % STIFFNESS)
+filestiff.close()
 
 DISTS = stretch_calculator(LL, MM, NN, ratio, STIFFNESS)
 
@@ -46,4 +50,4 @@ for ij in range(NN-1):
 file.close() 
 #print(STIFFNESS)
 #print(len(DISTS))
-#print(POS)
+print(POS)

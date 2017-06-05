@@ -38,15 +38,15 @@ PVector gravity = new PVector(0, 10); // magnitude of gravity (y-direction, posi
 
 // Parameterization of simulation variables
 int numOfspring = numOfpoint - 1;
-float segLength = FilamLength / numOfspring; // distance between points
+float natLength = FilamLength / numOfspring; // distance between points
 float diam = (FilamLength / 2) / numOfpoint; // radius of circles showing the points (only for design purposes)
 float mass = FilamMass / numOfpoint; // mass of each point
-float natLength;
+float [] segLength;
 
 
 // Declaration of variables used
 float [] x, y, vx, vy, ax, ay; // position, velocity and acceleration for each point-mass
-float [] stiffness; // array for stiffness of each spring
+float stiffness; // array for stiffness of each spring
 
 PrintWriter output; // handles output file
 
@@ -64,17 +64,15 @@ PVector F, Temp; // forces
 void setup() {
   size(800, 600);
   // Initialization
-  Initializer(nat_seg);
-  if (freeVib) spring_initialize(0);
-  else spring_initialize();
+  Initializer();
   
-  masses[0].makeFixed();
-  if (pinEnd) masses[numOfpoint-1].makeFixed();
+  //masses[0].makeFixed();
+  //if (pinEnd) masses[numOfpoint-1].makeFixed();
 
-  if (wrSwitch) {
-    output = createWriter("positions.txt");
-    output.println("t, x, y");
-  }
+  //if (wrSwitch) {
+  //  output = createWriter("positions.txt");
+  //  output.println("t, x, y");
+  //}
   //noLoop();
 } // end of setup
 
@@ -82,13 +80,13 @@ void setup() {
 
 void draw() {
   background(25);
-  textSize(32);
-  text(t, 10, 30);
+  //textSize(32);
+  //text(t, 10, 30);
 
   // Display
   for (SpringObj s : springs) s.display();
   for (MassObj m : masses) m.display();
-  
+
   ////for (int i = 0; i < numOfspring; i++) println(stiffness[i]);
   //// Update
   //RungeKutta4(t, dt);
@@ -122,9 +120,9 @@ void RungeKutta4(float t, float dt) {
       float yold = masses[i].position.y;
       float vxold = masses[i].velocity.x;
       float vyold = masses[i].velocity.y;
-      
+
       F = new PVector(0, 0);
-      
+
       // get k1
       x1 = xold;
       y1 = yold;
@@ -142,7 +140,7 @@ void RungeKutta4(float t, float dt) {
       // calculate acceleration
       ax1 = F.x/mass; 
       ay1 = F.y/mass;
-      
+
       // get k2
       x2 = xold + 0.5*vx1*dt;
       y2 = yold + 0.5*vy1*dt;
@@ -161,7 +159,7 @@ void RungeKutta4(float t, float dt) {
       // calculate acceleration
       ax2 = F.x/mass;
       ay2 = F.y/mass;
-      
+
       // get k3
       x3 = xold + 0.5*vx2*dt;
       y3 = yold + 0.5*vy2*dt;
@@ -206,7 +204,7 @@ void RungeKutta4(float t, float dt) {
 
       float vxnew = vxold + (dt/6)*(ax1 + 2*ax2 + 2*ax3 + ax4);
       float vynew = vyold + (dt/6)*(ay1 + 2*ay2 + 2*ay3 + ay4);
-      
+
       masses[i].updatePosition(xnew, ynew);
       masses[i].updateVelocity(vxnew, vynew);
     }
@@ -215,93 +213,116 @@ void RungeKutta4(float t, float dt) {
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////// Initializer ///////////////////////////////////////////
-void Initializer(float ratio) {
-  natLength = ratio*segLength;
+void Initializer() {
+  //natLength = ratio*segLength;
+  String [] lines = loadStrings("../distances.txt");
+  String [] stiffstring = loadStrings("../stiffness.txt");
   
   x = new float[numOfpoint];
   y = new float[numOfpoint];
   masses = new MassObj[numOfpoint];
   springs = new SpringObj[numOfspring];
-  stiffness = new float[numOfspring];
-  
+  segLength = new float[numOfspring];
+
+  stiffness = float(stiffstring[0]);
+  for (int i = 0; i < lines.length; i++) segLength[i] = float(lines[i]);
+
   // Create initial geometry
   if (!sinInit) {
     if ((alignX) && (!initAng)){
-      for (int i = 0; i < numOfpoint; i++) {
-        y[i] = height/2;
-        x[i] = i * segLength + width/15;
+      y[0] = height/2;
+      x[0] = width/15;
+      masses[0] = new MassObj(x[0], y[0], mass, diam);
+      for (int i = 1; i < numOfpoint; i++) {
+        y[i] = y[i-1];
+        x[i] = segLength[i-1] + x[i-1];
         masses[i] = new MassObj(x[i], y[i], mass, diam);
       }
     }
     else if ((!alignX) && (!initAng)){
-      for (int i = 0; i < numOfpoint; i++) {
-        y[i] = i * segLength + height/15;
-        x[i] = width/2;
+      y[0] = height/15;
+      x[0] = width/2;
+      masses[0] = new MassObj(x[0], y[0], mass, diam);
+      for (int i = 1; i < numOfpoint; i++) {
+        y[i] = segLength[i-1] + y[i-1];
+        x[i] = x[i-1];
         masses[i] = new MassObj(x[i], y[i], mass, diam);
       }
     }
     else if ((alignX) && (initAng)){
-      for (int i = 0; i < numOfpoint; i++) {
-        x[i] = i * segLength * cos(angle) + width/15;
-        y[i] = i * segLength * sin(angle) + height/2;
+      y[0] = height/2;
+      x[0] = width/15;
+      masses[0] = new MassObj(x[0], y[0], mass, diam);
+      for (int i = 1; i < numOfpoint; i++) {
+        x[i] = segLength[i-1] * cos(angle) + x[i-1];
+        y[i] = segLength[i-1] * sin(angle) + y[i-1];
         masses[i] = new MassObj(x[i], y[i], mass, diam);
       }
     }
     else if ((!alignX) && (initAng)){
-      for (int i = 0; i < numOfpoint; i++) {
-        x[i] = i * segLength * sin(angle) + width/2;
-        y[i] = i * segLength * cos(angle) + height/15;
+      y[0] = height/15;
+      x[0] = width/2;
+      masses[0] = new MassObj(x[0], y[0], mass, diam);
+      for (int i = 1; i < numOfpoint; i++) {
+        x[i] = segLength[i-1] * sin(angle) + x[i-1];
+        y[i] = segLength[i-1] * cos(angle) + y[i-1];
         masses[i] = new MassObj(x[i], y[i], mass, diam);
       }
     }
    }
    else if (sinInit) {
       if (alignX) {
-        for (int i = 0; i < numOfpoint; i++) {
-          float offsetY = height/2;
-          float offsetX = width/15;
-          x[i] = i * segLength + offsetX;
+        float offsetY = height/2;
+        float offsetX = width/15;
+        x[0] = offsetX;
+        y[0] = offsetY;
+        masses[0] = new MassObj(x[0], y[0], mass, diam);
+        for (int i = 1; i < numOfpoint; i++) {
+          x[i] = segLength[i-1] + x[i-1];
           y[i] = sinAmp * sin(sinN*PI*(x[i]-offsetX)/FilamLength) + offsetY;
           masses[i] = new MassObj(x[i], y[i], mass, diam);
         }
       }
       else {
-        for (int i = 0; i < numOfpoint; i++) {
-          float offsetY = height/15;
-          float offsetX = width/2;
-          y[i] = i * segLength + offsetY;
+        float offsetY = height/15;
+        float offsetX = width/2;
+        x[0] = offsetX;
+        y[0] = offsetY;
+        masses[0] = new MassObj(x[0], y[0], mass, diam);
+        for (int i = 1; i < numOfpoint; i++) {
+          y[i] = segLength[i-1] + y[i-1];
           x[i] = sinAmp * sin(sinN*PI*(y[i]-offsetY)/FilamLength) + offsetX;
           masses[i] = new MassObj(x[i], y[i], mass, diam);
         }
       }
     }
+    spring_initialize(stiffness);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////// Springs - Stiffness ///////////////////////////////////
-void spring_initialize() {  
-  // Calculate stiffness of springs
-  for (int i = 0; i < numOfspring; i++) {
-    stiffness[i] = (gravity.mag()/abs(natLength - segLength)) * (numOfspring-i) * mass;
-  }
-  // Create springs
-  for (int i = 0; i < numOfspring; i++) {
-    springs[i] = new SpringObj( masses[i], masses[i+1], stiffness[i], 0, natLength );
-  }
-}
+//void spring_initialize() {  
+//  // Calculate stiffness of springs
+//  for (int i = 0; i < numOfspring; i++) {
+//    stiffness[i] = (gravity.mag()/abs(natLength - segLength)) * (numOfspring-i) * mass;
+//  }
+//  // Create springs
+//  for (int i = 0; i < numOfspring; i++) {
+//    springs[i] = new SpringObj( masses[i], masses[i+1], stiffness[i], 0, natLength );
+//  }
+//}
 
 void spring_initialize(float stiff) {
-  for (int i = 0; i < numOfspring; i++) stiffness[i] = stiff; // constant stiffness without gravity
   // Create springs
   for (int i = 0; i < numOfspring; i++) {
-    springs[i] = new SpringObj( masses[i], masses[i+1], stiffness[i], 0, natLength );
+    springs[i] = new SpringObj( masses[i], masses[i+1], stiff, 0, natLength );
   }
 }
 
-void mousePressed() {
-  loop();
-}
+//void mousePressed() {
+//  loop();
+//}
 
-void mouseReleased() {
-  noLoop();
-}
+//void mouseReleased() {
+//  noLoop();
+//}
