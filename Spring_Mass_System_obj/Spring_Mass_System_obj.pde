@@ -89,19 +89,19 @@ void draw() {
   for (SpringObj s : springs) s.display();
   for (MassObj m : masses) m.display();
   
-  //for (int i = 0; i < numOfspring; i++) println(stiffness[i]);
-  // Update
-  RungeKutta4(t, dt);
-  t += dt;
+  ////for (int i = 0; i < numOfspring; i++) println(stiffness[i]);
+  //// Update
+  //RungeKutta4(t, dt);
+  //t += dt;
 
-  // Check Collisions
-
-
-  // Resolve Collisions
+  //// Check Collisions
 
 
+  //// Resolve Collisions
 
-  //noLoop();
+
+
+  ////noLoop();
 }
 
 
